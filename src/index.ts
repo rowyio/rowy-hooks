@@ -23,6 +23,7 @@ const users = [
   }
 ];
 
+// simple use case of connect service
 app.post('/', (req, res) => {
   let filteredUsers = users;
     const searchQuery:any = req.query.q;
@@ -34,7 +35,16 @@ app.post('/', (req, res) => {
     })
 });
 
-
+// the row Data is always passed as the body object this can be used to customize options for each row
+app.post('/useRowData', (req, res) => {
+    const rowData = req.body
+    console.log(rowData)
+    res.send({
+        results: [{
+          ...rowData.options
+        }]
+    })
+});
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`connect-service: listening on port ${port}!`);
