@@ -38,12 +38,7 @@ app.post('/', (req, res) => {
 // the row Data is always passed as the body object this can be used to customize options for each row
 app.post('/useRowData', (req, res) => {
     const rowData = req.body
-    console.log(rowData)
-    res.send({
-        results: [{
-          ...rowData.options
-        }]
-    })
+    res.send({ results: rowData.options})  
 });
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
