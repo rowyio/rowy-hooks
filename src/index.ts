@@ -1,48 +1,39 @@
 
-import express from 'express'
+import firebase from "firebase-admin";
+import express,{Request,Response} from 'express'
 import cors from "cors";
+import { hasAnyRole, requireAuth } from "./middleware/auth";
+import { configPublisher } from "./publisher";
+import {consumer} from './consumer'
 
 const app = express();
 // json is the default content-type for POST requests
 app.use(express.json());
 app.use(cors());
 
-
-const users = [
-  {
-      "name": "John Smith",
-      "email": "john.smith@fake.com"
-  },
-  {
-      "name": "Matthew Jones",
-      "email": "matthew.jones@fake.com"
-  },
-  {
-      "name": "Jane Doe",
-      "email": "jane.doe@fake.com"
-  }
-];
-
-// simple use case of connect service
-app.post('/', (req, res) => {
-  let filteredUsers = users;
-    const searchQuery:any = req.query.q;
-    if (req.query.q) {
-        filteredUsers = users.filter((u) => u.name.includes(searchQuery) || u.email.includes(searchQuery))
+const functionWrapper = (fn:(req:Request,user:any)=>Promise<any>) => async (req:Request, res:Response) => {
+    try {
+      const user: firebase.auth.UserRecord = res.locals.user;
+      const data = await fn(req, user);
+      res.status(200).send(data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send(error);
     }
-    res.send({
-        results: filteredUsers
-    })
-});
+  };
 
-// the row Data is always passed as the body object this can be used to customize options for each row
-app.post('/useRowData', (req, res) => {
-    const rowData = req.body
-    res.send({ results: rowData.options})  
-});
+// Webhooks
+app.post(
+    "/publishWebhooks",
+    requireAuth,
+    hasAnyRole(["ADMIN"]),
+    functionWrapper(configPublisher)
+  );
+  app.post("/h/:tablePath/:endpoint", consumer);
+
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
-  console.log(`connect-service: listening on port ${port}!`);
+  console.log(`RowyHooks: listening on port ${port}!`);
 });
 
 

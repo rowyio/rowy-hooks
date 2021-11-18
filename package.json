@@ -1,6 +1,6 @@
 {
-  "name": "connect-service",
-  "description": "example of connect-service server with cloud run",
+  "name": "rowy-hooks",
+  "description": "webhooks endpoint for rowy apps",
   "version": "1.0.0",
   "main": "build/index.js",
   "scripts": {
@@ -16,11 +16,15 @@
   "engines": {
     "node": ">= 13.0.0"
   },
-  "author": "ROWY LLC",
+  "author": "ROWY INC",
   "license": "Apache-2.0",
   "dependencies": {
+    "@google-cloud/firestore": "^4.15.1",
+    "@google-cloud/logging": "^9.6.3",
+    "axios": "^0.24.0",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "firebase-admin": "^10.0.0"
   },
   "devDependencies": {
     "@types/async-redis": "^1.1.2",
