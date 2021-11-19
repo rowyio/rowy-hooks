@@ -5,37 +5,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const auth_1 = require("./middleware/auth");
+const publisher_1 = require("./publisher");
+const consumer_1 = require("./consumer");
 const app = express_1.default();
 // json is the default content-type for POST requests
 app.use(express_1.default.json());
 app.use(cors_1.default());
-const users = [
-    {
-        "name": "John Smith",
-        "email": "john.smith@fake.com"
-    },
-    {
-        "name": "Matthew Jones",
-        "email": "matthew.jones@fake.com"
-    },
-    {
-        "name": "Jane Doe",
-        "email": "jane.doe@fake.com"
+const functionWrapper = (fn) => async (req, res) => {
+    try {
+        const user = res.locals.user;
+        const data = await fn(req, user);
+        res.status(200).send(data);
     }
-];
-app.post('/', (req, res) => {
-    let filteredUsers = users;
-    const searchQuery = req.query.q;
-    if (req.query.q) {
-        filteredUsers = users.filter((u) => u.name.includes(searchQuery) || u.email.includes(searchQuery));
+    catch (error) {
+        console.error(error);
+        res.status(500).send(error);
     }
-    res.send({
-        results: filteredUsers
-    });
-});
+};
+// Webhooks
+app.post("/publish", auth_1.requireAuth, auth_1.hasAnyRole(["ADMIN"]), functionWrapper(publisher_1.configPublisher));
+app.post("/wh/:tablePath/:endpoint", consumer_1.consumer);
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
-    console.log(`connect-service: listening on port ${port}!`);
+    console.log(`RowyHooks: listening on port ${port}!`);
 });
 // Exports for testing purposes.
 module.exports = app;

@@ -1,5 +1,5 @@
 #!/bin/bash
-name=connect-service
+name=rowy-hooks
 helpFunction()
 {
    echo "Usage: ./deploy.sh --project [YOUR GCLOUD PROJECT ID]"

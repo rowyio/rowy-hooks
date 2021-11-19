@@ -24,12 +24,12 @@ const functionWrapper = (fn:(req:Request,user:any)=>Promise<any>) => async (req:
 
 // Webhooks
 app.post(
-    "/publishWebhooks",
+    "/publish",
     requireAuth,
     hasAnyRole(["ADMIN"]),
     functionWrapper(configPublisher)
   );
-  app.post("/h/:tablePath/:endpoint", consumer);
+  app.post("/wh/:tablePath/:endpoint", consumer);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {

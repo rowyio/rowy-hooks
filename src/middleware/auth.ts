@@ -25,8 +25,11 @@ export const hasAnyRole =
         next();
       } else {
         const latestUser = await auth.getUser(user.uid);
+        if (!latestUser) {
+          return res.status(401).send("User not found");
+        }else{
         const authDoubleCheck = roles.some((role) =>
-          latestUser.customClaims.roles.includes(role)
+         latestUser.customClaims?.roles.includes(role)
         );
         if (authDoubleCheck) {
           next();
@@ -38,6 +41,7 @@ export const hasAnyRole =
           });
         }
       }
+    }
     } catch (err) {
       res.status(401).send({ error: err });
     }
