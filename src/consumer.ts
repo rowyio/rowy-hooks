@@ -30,6 +30,14 @@ const verifiers = {
     console.log(secret, signature, `sha256=${hash}`, request.body.toString());
     return signature === `sha256=${hash}`;
   },
+  github: function (request:Request, secret?:string) {
+    const signature = request.headers["x-hub-signature"];
+    const hash = crypto
+      .createHmac("sha1", secret)
+      .update(JSON.stringify(request.body))
+      .digest("hex");
+    return signature === `sha1=${hash}`;
+  }
 };
 
 // See: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
