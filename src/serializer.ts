@@ -7,12 +7,12 @@ export const serializeWebhooks = (
   webhooks
     .filter((webhooks) => webhooks.active)
     .map(
-      ({ name, type, endpoint, secret, conditions, parser }) => `{
+      ({ name, type, endpoint, auth, conditions, parser }) => `{
           name: "${name}",
           type: "${type}",
-          url: "/whs/${tablePath}/${endpoint}",
+          url: "/wh/${tablePath}/${endpoint}",
+          auth: ${JSON.stringify(auth)},
           endpoint: "${endpoint}",
-          secret: ${secret ? `"${secret}"` : null},
           tablePath: "${tablePath}",
           conditions: ${conditions
             .replace(/^.*:\s*Condition\s*=/, "")

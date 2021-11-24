@@ -27,6 +27,10 @@ export interface IWebhookEditor {
 export interface IWebhook {
   // rowy meta fields
   name: string;
+  auth: {
+    enabled: boolean;
+    secret: string;
+  };
   active: boolean;
   lastEditor: IWebhookEditor;
   // webhook specific fields

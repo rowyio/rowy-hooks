@@ -21,6 +21,7 @@
   "dependencies": {
     "@google-cloud/firestore": "^4.15.1",
     "@google-cloud/logging": "^9.6.3",
+    "@sendgrid/eventwebhook": "^7.4.5",
     "axios": "^0.24.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
