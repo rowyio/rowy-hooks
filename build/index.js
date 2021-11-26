@@ -10,7 +10,18 @@ const publisher_1 = require("./publisher");
 const consumer_1 = require("./consumer");
 const app = express_1.default();
 // json is the default content-type for POST requests
-app.use(express_1.default.json());
+const rawBodySaver = (req, res, buf, encoding) => {
+    if (req.headers["user-agent"] === "Typeform Webhooks" &&
+        req.headers["typeform-signature"] &&
+        buf &&
+        buf.length) {
+        req.rawBody = buf.toString(encoding || "utf8");
+    }
+};
+const options = {
+    verify: rawBodySaver
+};
+app.use(express_1.default.json(options));
 app.use(cors_1.default());
 const functionWrapper = (fn) => async (req, res) => {
     try {

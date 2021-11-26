@@ -1,6 +1,6 @@
 
 import firebase from "firebase-admin";
-import express,{Request,Response} from 'express'
+import express,{Request,Response,} from 'express'
 import cors from "cors";
 import { hasAnyRole, requireAuth } from "./middleware/auth";
 import { configPublisher } from "./publisher";
@@ -8,7 +8,23 @@ import {consumer} from './consumer'
 
 const app = express();
 // json is the default content-type for POST requests
-app.use(express.json());
+const rawBodySaver = (req:any, res:Response, buf:Buffer, encoding:BufferEncoding) => {
+  if (
+    req.headers["user-agent"] === "Typeform Webhooks" &&
+    req.headers["typeform-signature"] &&
+    buf &&
+    buf.length
+  ) {
+    req.rawBody = buf.toString(encoding || "utf8");
+  }
+};
+
+const options = {
+  verify: rawBodySaver
+};
+
+app.use(express.json(options));
+
 app.use(cors());
 
 const functionWrapper = (fn:(req:Request,user:any)=>Promise<any>) => async (req:Request, res:Response) => {
