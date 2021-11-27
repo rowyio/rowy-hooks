@@ -78,18 +78,18 @@ type Endpoint = {
 };
 
 export const consumer = async (req: Request, res: Response) => {
-  const { url } = req;
+  const {params} = req;
   try {
     if (!endpoints) {
       const snapshot = await db.doc(WEBHOOKS_DOC_PATH).get();
       await setEndpoints(snapshot);
     }
     const endpoint: Endpoint = endpoints?.find(function (o) {
-      return o.url === url;
+      return o.endpoint === params.endpoint;
     });
     if (!endpoint) throw Error("404");
     const ref = db.collection(endpoint.tablePath);
-    if (endpoint.auth.enabled) {
+    if (endpoint.auth?.enabled) {
       const verified = verifiers[endpoint.type](req, endpoint.auth);
       if (!verified) throw Error("401");
     }
