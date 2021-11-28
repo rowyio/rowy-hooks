@@ -5,6 +5,7 @@ import cors from "cors";
 import { hasAnyRole, requireAuth } from "./middleware/auth";
 import { configPublisher } from "./publisher";
 import {consumer} from './consumer'
+import rowyRedirect from "./rowyRedirect";
 
 const app = express();
 // json is the default content-type for POST requests
@@ -38,6 +39,9 @@ const functionWrapper = (fn:(req:Request,user:any)=>Promise<any>) => async (req:
     }
   };
 
+// redirect /
+app.get("/", rowyRedirect)
+
 // Webhooks
 app.post(
     "/publish",
@@ -51,7 +55,6 @@ const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`RowyHooks: listening on port ${port}!`);
 });
-
 
 // Exports for testing purposes.
 module.exports = app;
