@@ -1,5 +1,5 @@
 import { Request } from "express";
-const crypto = require("crypto");
+import crypto from "crypto";
 
 function github (request: Request, auth: any) {
     const { secret } = auth;

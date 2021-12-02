@@ -1,13 +1,16 @@
 
-import firebase from "firebase-admin";
-import express,{Request,Response,} from 'express'
-import cors from "cors";
-import { hasAnyRole, requireAuth } from "./middleware/auth";
-import { configPublisher } from "./publisher";
-import {consumer} from './consumer'
-import rowyRedirect from "./rowyRedirect";
+import { UserRecord } from 'firebase-admin/auth';
 
-const app = express();
+import * as express from "express"; 
+import { Request, Response } from 'express';
+
+import cors from "cors";
+import { hasAnyRole, requireAuth } from './middleware/auth.js';
+import { configPublisher } from "./publisher.js";
+import {consumer} from './consumer.js'
+import rowyRedirect from "./rowyRedirect.js";
+
+const app = express.default();
 // json is the default content-type for POST requests
 const rawBodySaver = (req:any, res:Response, buf:Buffer, encoding:BufferEncoding) => {
   if (
@@ -24,13 +27,13 @@ const options = {
   verify: rawBodySaver
 };
 
-app.use(express.json(options));
-
+app.use(express.json(options));// support json encoded bodies
+app.use(express.urlencoded({ extended: true })); // support encoded bodies
 app.use(cors());
 
 const functionWrapper = (fn:(req:Request,user:any)=>Promise<any>) => async (req:Request, res:Response) => {
     try {
-      const user: firebase.auth.UserRecord = res.locals.user;
+      const user: UserRecord = res.locals.user;
       const data = await fn(req, user);
       res.status(200).send(data);
     } catch (error) {
@@ -49,7 +52,7 @@ app.post(
     hasAnyRole(["ADMIN"]),
     functionWrapper(configPublisher)
   );
-  app.post("/wh/:tablePath/:endpoint", consumer);
+app.post("/wh/:tablePath/:endpoint", consumer);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
@@ -57,4 +60,4 @@ app.listen(port, () => {
 });
 
 // Exports for testing purposes.
-module.exports = app;
+export { app };

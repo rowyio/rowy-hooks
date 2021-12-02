@@ -1,4 +1,4 @@
-import { IWebhook } from "./types";
+import { IWebhook } from "./types.js";
 /* Convert webhook objects into a single readable string */
 export const serializeWebhooks = (
   webhooks: IWebhook[],

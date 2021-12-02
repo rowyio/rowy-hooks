@@ -1,4 +1,4 @@
-import { auth } from "../firebaseConfig";
+import { auth } from "../firebaseConfig.js";
 
 export const requireAuth = async (req: any, res: any, next: any) => {
   try {

@@ -1,6 +1,6 @@
-import typeform from "./typeform";
-import github from "./github";
-import sendgrid from "./sendgrid"; 
+import typeform from "./typeform.js";
+import github from "./github.js";
+import sendgrid from "./sendgrid.js"; 
 
 function basic (req:any,auth:any){
     return true

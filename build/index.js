@@ -1,14 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
-const auth_1 = require("./middleware/auth");
-const publisher_1 = require("./publisher");
-const consumer_1 = require("./consumer");
-const app = express_1.default();
+import * as express from "express";
+import cors from "cors";
+import { hasAnyRole, requireAuth } from './middleware/auth.js';
+import { configPublisher } from "./publisher.js";
+import { consumer } from './consumer.js';
+import rowyRedirect from "./rowyRedirect.js";
+const app = express.default();
 // json is the default content-type for POST requests
 const rawBodySaver = (req, res, buf, encoding) => {
     if (req.headers["user-agent"] === "Typeform Webhooks" &&
@@ -21,8 +17,9 @@ const rawBodySaver = (req, res, buf, encoding) => {
 const options = {
     verify: rawBodySaver
 };
-app.use(express_1.default.json(options));
-app.use(cors_1.default());
+app.use(express.json(options)); // support json encoded bodies
+app.use(express.urlencoded({ extended: true })); // support encoded bodies
+app.use(cors());
 const functionWrapper = (fn) => async (req, res) => {
     try {
         const user = res.locals.user;
@@ -34,12 +31,14 @@ const functionWrapper = (fn) => async (req, res) => {
         res.status(500).send(error);
     }
 };
+// redirect /
+app.get("/", rowyRedirect);
 // Webhooks
-app.post("/publish", auth_1.requireAuth, auth_1.hasAnyRole(["ADMIN"]), functionWrapper(publisher_1.configPublisher));
-app.post("/wh/:tablePath/:endpoint", consumer_1.consumer);
+app.post("/publish", requireAuth, hasAnyRole(["ADMIN"]), functionWrapper(configPublisher));
+app.post("/wh/:tablePath/:endpoint", consumer);
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
     console.log(`RowyHooks: listening on port ${port}!`);
 });
 // Exports for testing purposes.
-module.exports = app;
+export { app };

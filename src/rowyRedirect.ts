@@ -1,7 +1,7 @@
 
 import { Request,Response } from "express";
-import { db } from "./firebaseConfig";
-import { getProjectId } from "./metadataService";
+import { db } from "./firebaseConfig.js";
+import { getProjectId } from "./metadataService.js";
  
 export default async (req:Request, res:Response) => {
     const projectId = await getProjectId();

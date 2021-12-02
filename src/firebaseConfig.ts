@@ -1,13 +1,13 @@
 // Initialize Firebase Admin
-import * as admin from "firebase-admin";
-
-const credential = process.env.DEV
-  ? admin.credential.cert(require(`../firebase-adminsdk.json`))
-  : admin.credential.applicationDefault();
-admin.initializeApp({
-  credential,
+import { initializeApp,applicationDefault } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
+initializeApp({
+  credential: applicationDefault(),
 });
-const db = admin.firestore();
-const auth = admin.auth();
+const db = getFirestore();
+const auth = getAuth();
+const storage = getStorage();
 db.settings({ timestampsInSnapshots: true, ignoreUndefinedProperties: true });
-export { db, admin, auth };
+export { db, auth, storage};

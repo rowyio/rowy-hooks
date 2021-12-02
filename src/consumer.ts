@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
 import { DocumentSnapshot } from "@google-cloud/firestore";
-import { db } from "./firebaseConfig";
-import { WEBHOOKS_DOC_PATH } from "./constants";
+import { db } from "./firebaseConfig.js";
+import { WEBHOOKS_DOC_PATH } from "./constants.js";
 import { Logging } from "@google-cloud/logging";
-import { getProjectId } from "./metadataService";
-import verifiers from './verifiers'
+import { getProjectId } from "./metadataService.js";
+import verifiers from "./verifiers/index.js";
+
+import * as rowy from './utils/index.js'
+
+const {url2storage} = rowy
 
 let endpoints: null | any[] = null;
 const setEndpoints = async (snapshot: DocumentSnapshot) => {

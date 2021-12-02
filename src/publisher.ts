@@ -1,7 +1,7 @@
-import { db } from "./firebaseConfig";
+import { db } from "./firebaseConfig.js";
 import { Request } from "express";
-import { serializeWebhooks } from "./serializer";
-import { WEBHOOKS_DOC_PATH } from "./constants";
+import { serializeWebhooks } from "./serializer.js";
+import { WEBHOOKS_DOC_PATH } from "./constants.js";
 
 export const configPublisher = async (req: Request) => {
   const { tableConfigPath, tablePath } = req.body;
