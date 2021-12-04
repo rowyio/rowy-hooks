@@ -5,10 +5,12 @@ import { WEBHOOKS_DOC_PATH } from "./constants.js";
 import { Logging } from "@google-cloud/logging";
 import { getProjectId } from "./metadataService.js";
 import verifiers from "./verifiers/index.js";
+import fetch from "node-fetch";
 
-import * as rowy from './utils/index.js'
+import * as rowy from "./utils/index.js";
 
-const {url2storage} = rowy
+const { url2storage } = rowy;
+const _fetch = fetch;
 
 let endpoints: null | any[] = null;
 const setEndpoints = async (snapshot: DocumentSnapshot) => {
@@ -82,7 +84,7 @@ type Endpoint = {
 };
 
 export const consumer = async (req: Request, res: Response) => {
-  const {params} = req;
+  const { params } = req;
   try {
     if (!endpoints) {
       const snapshot = await db.doc(WEBHOOKS_DOC_PATH).get();
