@@ -1,20 +1,24 @@
-FROM node:14-slim
-
-# Create and change to the app directory.
-WORKDIR /workdir
-# Copy application dependency manifests to the container image.
-# A wildcard is used to ensure copying both package.json AND package-lock.json (when available).
-# Copying this first prevents re-running npm install on every code change.
+# STAGE 1
+FROM node:16-alpine as builder
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app
 COPY package*.json ./
-COPY . ./
-# Install production dependencies.
-# If you add a package-lock.json, speed your build by switching to 'npm ci'.
-# RUN npm ci --only=production
-RUN yarn
-RUN npx tsc
-RUN yarn build
-# Copy local code to the container image.
+RUN npm config set unsafe-perm true
+RUN npm install -g typescript
+RUN npm install -g ts-node
+#USER node
+RUN npm install
+COPY --chown=node:node . .
+RUN npm run build
 
+# STAGE 2
+FROM node:16-alpine
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+WORKDIR /home/node/app
+COPY package*.json ./
+# USER node
+RUN npm install --production
+COPY --from=builder /home/node/app/build ./build
 
-# Run the web service on container startup.
-CMD [ "yarn", "start" ]
+EXPOSE 8080
+CMD [ "node", "build/index.js" ]
