@@ -36,6 +36,9 @@ app.get("/", rowyRedirect);
 // Webhooks
 app.post("/publish", requireAuth, hasAnyRole(["ADMIN"]), functionWrapper(configPublisher));
 app.post("/wh/:tablePath/:endpoint", consumer);
+
+// metadata service
+//app.get("/metadata",metadataService)
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
     console.log(`RowyHooks: listening on port ${port}!`);

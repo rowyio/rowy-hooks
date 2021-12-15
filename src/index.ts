@@ -9,7 +9,7 @@ import { hasAnyRole, requireAuth } from './middleware/auth.js';
 import { configPublisher } from "./publisher.js";
 import {consumer} from './consumer.js'
 import rowyRedirect from "./rowyRedirect.js";
-
+//import { metadataService } from './metadataService.js';
 const app = express.default();
 // json is the default content-type for POST requests
 const rawBodySaver = (req:any, res:Response, buf:Buffer, encoding:BufferEncoding) => {
@@ -54,10 +54,13 @@ app.post(
   );
 app.post("/wh/:tablePath/:endpoint", consumer);
 
+// metadata service
+//app.get("/metadata",metadataService)
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`RowyHooks: listening on port ${port}!`);
 });
+
 
 // Exports for testing purposes.
 export { app };
