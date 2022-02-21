@@ -1,56 +1,60 @@
 import { getSecret } from "./secrets.js";
 import { getServiceAccountUser } from "./getServiceAccountUser.js";
 import { url2storage, data2storage } from "./storage";
-import { getNumericProjectId, getProjectId,getServiceAccountEmail } from "../metadataService.js";
+import {
+  getNumericProjectId,
+  getProjectId,
+  getServiceAccountEmail,
+} from "../metadataService.js";
 type RowyFile = {
-    downloadURL: string;
-    name: string;
-    type: string;
-    lastModifiedTS: number;
+  downloadURL: string;
+  name: string;
+  type: string;
+  lastModifiedTS: number;
+};
+type RowyUser = {
+  email: any;
+  emailVerified: boolean;
+  displayName: string;
+  photoURL: string;
+  uid: string;
+  timestamp: number;
+};
+type uploadOptions = {
+  bucket?: string;
+  folderPath?: string;
+  fileName?: string;
+};
+interface Rowy {
+  metadata: {
+    projectId: () => Promise<string>;
+    projectNumber: () => Promise<string>;
+    serviceAccountEmail: () => Promise<string>;
+    serviceAccountUser: () => Promise<RowyUser>;
   };
-  type RowyUser = {
-    email: any;
-    emailVerified: boolean;
-    displayName: string;
-    photoURL: string;
-    uid: string;
-    timestamp: number;
+  secrets: {
+    get: (name: string, version?: string) => Promise<string | undefined>;
   };
-  type uploadOptions = {
-    bucket?: string;
-    folderPath?: string;
-    fileName?: string;
+  storage: {
+    upload: {
+      url: (
+        url: string,
+        options: uploadOptions
+      ) => Promise<RowyFile | undefined>;
+      data: (
+        data: Buffer | string,
+        options: uploadOptions
+      ) => Promise<RowyFile | undefined>;
+    };
   };
-  interface Rowy {
-    metadata: {
-      projectId: () => Promise<string>;
-      projectNumber: () => Promise<string>;
-      serviceAccountEmail: () => Promise<string>;
-      serviceAccountUser: () => Promise<RowyUser>;
-    };
-    secrets: {
-      get: (name: string, version?: string) => Promise<string | undefined>;
-    };
-    storage: {
-      upload: {
-        url: (
-          url: string,
-          options: uploadOptions
-        ) => Promise<RowyFile | undefined>;
-        data: (
-          data: Buffer | string,
-          options: uploadOptions
-        ) => Promise<RowyFile | undefined>;
-      };
-    };
-  }
+}
 
 const rowy: Rowy = {
   metadata: {
-      projectId: getProjectId,
-      projectNumber:getNumericProjectId,
-      serviceAccountUser: getServiceAccountUser,
-      serviceAccountEmail: getServiceAccountEmail,
+    projectId: getProjectId,
+    projectNumber: getNumericProjectId,
+    serviceAccountUser: getServiceAccountUser,
+    serviceAccountEmail: getServiceAccountEmail,
   },
   secrets: {
     get: getSecret,
