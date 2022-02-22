@@ -49,7 +49,10 @@ interface Rowy {
   };
 }
 
-const rowy: Rowy = {
+const rowy: any = {
+  getSecret,
+  getServiceAccountUser,
+  url2storage,
   metadata: {
     projectId: getProjectId,
     projectNumber: getNumericProjectId,
