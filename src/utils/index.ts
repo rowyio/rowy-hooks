@@ -1,6 +1,6 @@
 import { getSecret } from "./secrets.js";
 import { getServiceAccountUser } from "./getServiceAccountUser.js";
-import { url2storage, data2storage } from "./storage";
+import { url2storage, data2storage } from "./storage.js";
 import {
   getNumericProjectId,
   getProjectId,

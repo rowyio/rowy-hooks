@@ -7,9 +7,9 @@ import { getProjectId } from "./metadataService.js";
 import verifiers from "./verifiers/index.js";
 import fetch from "node-fetch";
 
-import * as rowy from "./utils/index.js";
+import rowy from "./utils/index.js";
 
-const { url2storage } = rowy;
+const { secrets } = rowy;
 const _fetch = fetch;
 
 let endpoints: null | any[] = null;

@@ -4,6 +4,7 @@ import { hasAnyRole, requireAuth } from './middleware/auth.js';
 import { configPublisher } from "./publisher.js";
 import { consumer } from './consumer.js';
 import rowyRedirect from "./rowyRedirect.js";
+//import { metadataService } from './metadataService.js';
 const app = express.default();
 // json is the default content-type for POST requests
 const rawBodySaver = (req, res, buf, encoding) => {
@@ -36,7 +37,6 @@ app.get("/", rowyRedirect);
 // Webhooks
 app.post("/publish", requireAuth, hasAnyRole(["ADMIN"]), functionWrapper(configPublisher));
 app.post("/wh/:tablePath/:endpoint", consumer);
-
 // metadata service
 //app.get("/metadata",metadataService)
 const port = process.env.PORT || 8080;

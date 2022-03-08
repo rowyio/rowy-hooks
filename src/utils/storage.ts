@@ -1,9 +1,9 @@
 import { fileTypeFromBuffer } from "file-type";
-import { storage } from "../firebaseConfig";
+import { storage } from "../firebaseConfig.js";
 import * as uuid from "uuid";
 
 import fetch from "node-fetch";
-import { getProjectId } from "../metadataService";
+import { getProjectId } from "../metadataService.js";
 export const url2storage = async (
   url: string,
   options: {
