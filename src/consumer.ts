@@ -9,6 +9,31 @@ import fetch from "node-fetch";
 
 import rowy from "./utils/index.js";
 
+
+type Endpoint = {
+  url: string;
+  path: string;
+  method: string;
+  type: "typeform" | "github" | "sendgrid" | "basic";
+  tablePath: string;
+  conditions: (arg: {
+    req: Request;
+    db: FirebaseFirestore.Firestore;
+    ref: FirebaseFirestore.CollectionReference;
+  }) => Promise<boolean>;
+  parser: (arg: {
+    req: Request;
+    db: FirebaseFirestore.Firestore;
+    ref: FirebaseFirestore.CollectionReference;
+    res: {send:(v:any)=>void
+    sendStatus:(v:number)=>void};
+  }) => Promise<any>;
+  auth: {
+    secret: string;
+    enabled: boolean;
+  };
+};
+
 const { secrets } = rowy;
 const _fetch = fetch;
 
@@ -21,11 +46,11 @@ const setEndpoints = async (snapshot: DocumentSnapshot) => {
   }
   const values = Object.values(docData);
   if (values && values.length !== 0) {
-    endpoints = eval(`[${values.join(",")}]`);
+    endpoints = eval(`[${values.filter((v:string|null) => v).join(",")}]`)
+      ;
   } else endpoints = [];
 };
 db.doc(WEBHOOKS_DOC_PATH).onSnapshot(setEndpoints);
-
 // See: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
 const severities = {
   "200": "INFO",
@@ -49,7 +74,6 @@ const logEvent = async (request: Request, code: HttpCode, error?: string) => {
     severity: severities[code],
   };
   // Prepares a log entry
-  //JSON.stringify()
   const entry = log.entry(metadata, {
     headers,
     url,
@@ -61,27 +85,6 @@ const logEvent = async (request: Request, code: HttpCode, error?: string) => {
   return log.write(entry);
 };
 
-type Endpoint = {
-  url: string;
-  path: string;
-  method: string;
-  type: "typeform" | "github" | "sendgrid" | "basic";
-  tablePath: string;
-  conditions: (arg: {
-    req: Request;
-    db: FirebaseFirestore.Firestore;
-    ref: FirebaseFirestore.CollectionReference;
-  }) => Promise<boolean>;
-  parser: (arg: {
-    req: Request;
-    db: FirebaseFirestore.Firestore;
-    ref: FirebaseFirestore.CollectionReference;
-  }) => Promise<any>;
-  auth: {
-    secret: string;
-    enabled: boolean;
-  };
-};
 
 export const consumer = async (req: Request, res: Response) => {
   const { params } = req;
@@ -101,10 +104,11 @@ export const consumer = async (req: Request, res: Response) => {
     }
     const condition = await endpoint.conditions({ req, db, ref });
     if (!condition) return res.sendStatus(412);
-    const newRow = await endpoint.parser({ req, db, ref });
+    let responseValue = undefined
+    const newRow = await endpoint.parser({ req, db, ref,res:{send:(v)=>{responseValue=v},sendStatus:res.sendStatus} });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");
-    return res.sendStatus(200);
+    return responseValue? res.send(responseValue):res.sendStatus(200);
   } catch (error: any) {
     const errorCode = error.message.length === 3 ? error.message : "500";
     await logEvent(req, errorCode, error.message);
