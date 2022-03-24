@@ -16,7 +16,9 @@ const rawBodySaver = (req, res, buf, encoding) => {
     }
 };
 const options = {
-    verify: rawBodySaver
+    verify: rawBodySaver,
+    limit: '50mb',
+    extended: false
 };
 app.use(express.json(options)); // support json encoded bodies
 app.use(express.urlencoded({ extended: true })); // support encoded bodies

@@ -74,17 +74,20 @@ const logEvent = async (request: Request, code: HttpCode, error?: string) => {
     severity: severities[code],
   };
   // Prepares a log entry
+  const bodySize = new TextEncoder().encode(JSON.stringify(body)).length
   const entry = log.entry(metadata, {
     headers,
     url,
     params,
-    body,
+    body: bodySize > 250000 ? {v:"body too large"} : body,
     query,
     error,
   });
   return log.write(entry);
 };
 
+let cachedResponses:{endpoint:string,request:string,response:any}[] = [
+]
 
 export const consumer = async (req: Request, res: Response) => {
   const { params } = req;
@@ -105,10 +108,26 @@ export const consumer = async (req: Request, res: Response) => {
     const condition = await endpoint.conditions({ req, db, ref });
     if (!condition) return res.sendStatus(412);
     let responseValue = undefined
+    const cachedResponse = cachedResponses.find(v=>v.endpoint===params.endpoint&&v.request===JSON.stringify(req.body))
+    if(cachedResponse){
+    return res.send(cachedResponse.response)
+    }
+
     const newRow = await endpoint.parser({ req, db, ref,res:{send:(v)=>{responseValue=v},sendStatus:res.sendStatus} });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");
-    return responseValue? res.send(responseValue):res.sendStatus(200);
+    if(responseValue){
+      cachedResponses.push(
+        {
+          endpoint:params.endpoint,
+          request:JSON.stringify(req.body),
+          response:responseValue
+        }
+      )
+      res.send(responseValue)
+    }else{
+      res.sendStatus(200)
+    }
   } catch (error: any) {
     const errorCode = error.message.length === 3 ? error.message : "500";
     await logEvent(req, errorCode, error.message);
