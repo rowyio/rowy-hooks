@@ -100,7 +100,7 @@ export const consumer = async (req: Request, res: Response) => {
     if (!endpoint) throw Error("404");
     const ref = db.collection(endpoint.tablePath);
     if (endpoint.auth?.enabled) {
-      const verified = verifiers[endpoint.type](req, endpoint.auth);
+      const verified = await verifiers[endpoint.type](req, endpoint.auth);
       if (!verified) throw Error("401");
     }
     const condition = await endpoint.conditions({ req, db, ref });
