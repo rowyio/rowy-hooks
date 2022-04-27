@@ -6,15 +6,13 @@ import { Logging } from "@google-cloud/logging";
 import { getProjectId } from "./metadataService.js";
 import verifiers from "./verifiers/index.js";
 import fetch from "node-fetch";
-
 import rowy from "./utils/index.js";
-
 
 type Endpoint = {
   url: string;
   path: string;
   method: string;
-  type: "typeform" | "github" | "sendgrid" | "basic";
+  type: "typeform" | "github" | "sendgrid" | "basic"| "webform";
   tablePath: string;
   conditions: (arg: {
     req: Request;
