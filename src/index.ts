@@ -55,6 +55,7 @@ app.post(
     functionWrapper(configPublisher)
   );
 app.post("/wh/:tablePath/:endpoint", consumer);
+app.get("/wh/:tablePath/:endpoint", consumer);
 
 // metadata service
 //app.get("/metadata",metadataService)
