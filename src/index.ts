@@ -1,7 +1,7 @@
 
 import { UserRecord } from 'firebase-admin/auth';
 
-import * as express from "express"; 
+import * as express from "express";
 import { Request, Response } from 'express';
 
 import cors from "cors";
@@ -20,13 +20,15 @@ const rawBodySaver = (req:any, res:Response, buf:Buffer, encoding:BufferEncoding
     buf.length
   ) {
     req.rawBody = buf.toString(encoding || "utf8");
+  } else if (req.headers["stripe-signature"]) {
+    req.rawBody = buf.toString(encoding || "utf8");
   }
 };
 
 const options = {
   verify: rawBodySaver,
   limit: '50mb',
-  extended: false 
+  extended: false
 };
 
 app.use(express.json(options));// support json encoded bodies
