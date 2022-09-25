@@ -9,6 +9,7 @@ import fetch from "node-fetch";
 import rowy from "./utils/index.js";
 
 type Endpoint = {
+  cacheEnabled: boolean;
   url: string;
   path: string;
   method: string;
@@ -107,7 +108,7 @@ export const consumer = async (req: Request, res: Response) => {
     if (!condition) return res.sendStatus(412);
     let responseValue = undefined
     const cachedResponse = cachedResponses.find(v=>v.endpoint===params.endpoint&&v.request===JSON.stringify(req.body))
-    if(cachedResponse){
+    if(cachedResponse && endpoint.cacheEnabled){
     return res.send(cachedResponse.response)
     }
 
