@@ -7,6 +7,7 @@ import { getProjectId } from "./metadataService.js";
 import verifiers from "./verifiers/index.js";
 import fetch from "node-fetch";
 import rowy from "./utils/index.js";
+import installDependenciesIfMissing from "./utils/installDependenciesIfMissing.js";
 
 type Endpoint = {
   cacheEnabled: boolean;
@@ -104,6 +105,10 @@ export const consumer = async (req: Request, res: Response) => {
       const verified = await verifiers[endpoint.type](req, endpoint.auth);
       if (!verified) throw Error("401");
     }
+    await installDependenciesIfMissing(
+        endpoint.conditions.toString(),
+        `condition ${endpoint.tablePath} of ${endpoint.url}`
+    )
     const condition = await endpoint.conditions({ req, db, ref });
     if (!condition) return res.sendStatus(412);
     let responseValue = undefined
@@ -112,6 +117,10 @@ export const consumer = async (req: Request, res: Response) => {
     return res.send(cachedResponse.response)
     }
 
+    await installDependenciesIfMissing(
+        endpoint.parser.toString(),
+        `parser ${endpoint.tablePath} of ${endpoint.url}`
+    )
     const newRow = await endpoint.parser({ req, db, ref,res:{send:(v)=>{responseValue=v},sendStatus:res.sendStatus} });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");
