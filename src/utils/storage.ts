@@ -16,14 +16,14 @@ export const url2storage = async (
   if (response.ok) {
     const dataBuffer = await response.buffer();
     const fileName = options.fileName ?? url.split("/").pop();
-    return await data2storage(dataBuffer, {...options,fileName})
-  } else {  
+    return await data2storage(dataBuffer, { ...options, fileName });
+  } else {
     return undefined;
   }
 };
 
 export const data2storage = async (
-  data: Buffer|string,
+  data: Buffer | string,
   options: {
     bucket?: string;
     folderPath?: string;
@@ -32,10 +32,12 @@ export const data2storage = async (
 ) => {
   const projectId = await getProjectId();
   const bucket = storage.bucket(options.bucket ?? `${projectId}.appspot.com`);
-  const fileType = Buffer.isBuffer(data)? await fileTypeFromBuffer(data) : {
-    ext: ".txt",
-    mime: "text/plain",
-  } as any
+  const fileType = Buffer.isBuffer(data)
+    ? await fileTypeFromBuffer(data)
+    : ({
+        ext: ".txt",
+        mime: "text/plain",
+      } as any);
   let fileName = options.fileName ?? uuid.v4();
   if (!fileName.includes(".")) {
     fileName = `${fileName}.${fileType.ext}`;

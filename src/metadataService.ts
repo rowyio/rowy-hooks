@@ -23,11 +23,11 @@ export const getNumericProjectId = async () =>
     .data;
 
 export const getServiceAccountEmail = async () =>
-  (await axiosInstance.get(
-    "computeMetadata/v1/instance/service-accounts"
-  )).data.split("\n")[1];
+  (
+    await axiosInstance.get("computeMetadata/v1/instance/service-accounts")
+  ).data.split("\n")[1];
 
-export const generateServiceAccessToken = async (audience:string) =>
+export const generateServiceAccessToken = async (audience: string) =>
   (
     await axiosInstance.get(
       `computeMetadata/v1/instance/service-accounts/default/identity?audience=${audience}`
