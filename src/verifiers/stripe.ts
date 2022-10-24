@@ -1,10 +1,24 @@
 import { Stripe } from "stripe";
+import rowy from "../utils/index.js";
 
-function stripe(request: any, auth: any) {
+async function stripe(request: any, auth: any) {
   const { secretKey, signingSecret } = auth;
   const signature = request.headers["stripe-signature"];
 
-  const stripeInstance = new Stripe(secretKey, {
+  let stripeSecretKey;
+  try {
+    stripeSecretKey = await rowy.secrets.get(secretKey);
+    if (!stripeSecretKey) {
+      console.error(`Stripe secret key is empty: ${secretKey}`);
+      return false;
+    }
+    console.log(`Stripe secret key ${secretKey} retrieved`);
+  } catch (err) {
+    console.error(`Stripe secret key ${secretKey} cannot be retrieved: ${err}`);
+    return false;
+  }
+
+  const stripeInstance = new Stripe(stripeSecretKey, {
     apiVersion: "2022-08-01",
   });
 
