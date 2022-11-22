@@ -5,15 +5,15 @@ import { WEBHOOKS_DOC_PATH } from "./constants.js";
 import { Logging } from "@google-cloud/logging";
 import { getProjectId } from "./metadataService.js";
 import verifiers from "./verifiers/index.js";
-import fetch from "node-fetch";
 import rowy from "./utils/index.js";
+import installDependenciesIfMissing from "./utils/installDependenciesIfMissing.js";
 
 type Endpoint = {
   cacheEnabled: boolean;
   url: string;
   path: string;
   method: string;
-  type: "typeform" | "github" | "sendgrid" | "basic"| "webform";
+  type: "typeform" | "github" | "sendgrid" | "basic" | "webform";
   tablePath: string;
   conditions: (arg: {
     req: Request;
@@ -24,8 +24,7 @@ type Endpoint = {
     req: Request;
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
-    res: {send:(v:any)=>void
-    sendStatus:(v:number)=>void};
+    res: { send: (v: any) => void; sendStatus: (v: number) => void };
   }) => Promise<any>;
   auth: {
     secret: string;
@@ -34,22 +33,20 @@ type Endpoint = {
 };
 
 const { secrets } = rowy;
-const _fetch = fetch;
 
 let endpoints: null | any[] = null;
 const setEndpoints = async (snapshot: DocumentSnapshot) => {
   const docData = snapshot.data();
   if (!docData) {
-    endpoints = [];
     return;
   }
   const values = Object.values(docData);
   if (values && values.length !== 0) {
-    endpoints = eval(`[${values.filter((v:string|null) => v).join(",")}]`)
-      ;
+    endpoints = eval(`[${values.filter((v: string | null) => v).join(",")}]`);
   } else endpoints = [];
 };
 db.doc(WEBHOOKS_DOC_PATH).onSnapshot(setEndpoints);
+
 // See: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
 const severities = {
   "200": "INFO",
@@ -57,6 +54,7 @@ const severities = {
   "401": "WARNING",
   "500": "ERROR",
 };
+
 type HttpCode = "200" | "404" | "401" | "500";
 const logEvent = async (request: Request, code: HttpCode, error?: string) => {
   const { headers, url, params, body, query } = request;
@@ -73,20 +71,20 @@ const logEvent = async (request: Request, code: HttpCode, error?: string) => {
     severity: severities[code],
   };
   // Prepares a log entry
-  const bodySize = new TextEncoder().encode(JSON.stringify(body)).length
+  const bodySize = new TextEncoder().encode(JSON.stringify(body)).length;
   const entry = log.entry(metadata, {
     headers,
     url,
     params,
-    body: bodySize > 250000 ? {v:"body too large"} : body,
+    body: bodySize > 250000 ? { v: "body too large" } : body,
     query,
     error,
   });
   return log.write(entry);
 };
 
-let cachedResponses:{endpoint:string,request:string,response:any}[] = [
-]
+let cachedResponses: { endpoint: string; request: string; response: any }[] =
+  [];
 
 export const consumer = async (req: Request, res: Response) => {
   const { params } = req;
@@ -104,28 +102,47 @@ export const consumer = async (req: Request, res: Response) => {
       const verified = await verifiers[endpoint.type](req, endpoint.auth);
       if (!verified) throw Error("401");
     }
+    await installDependenciesIfMissing(
+      endpoint.conditions.toString(),
+      `condition ${endpoint.tablePath} of ${endpoint.url}`
+    );
     const condition = await endpoint.conditions({ req, db, ref });
     if (!condition) return res.sendStatus(412);
-    let responseValue = undefined
-    const cachedResponse = cachedResponses.find(v=>v.endpoint===params.endpoint&&v.request===JSON.stringify(req.body))
-    if(cachedResponse && endpoint.cacheEnabled){
-    return res.send(cachedResponse.response)
+    let responseValue = undefined;
+    const cachedResponse = cachedResponses.find(
+      (v) =>
+        v.endpoint === params.endpoint && v.request === JSON.stringify(req.body)
+    );
+    if (cachedResponse && endpoint.cacheEnabled) {
+      return res.send(cachedResponse.response);
     }
 
-    const newRow = await endpoint.parser({ req, db, ref,res:{send:(v)=>{responseValue=v},sendStatus:res.sendStatus} });
+    await installDependenciesIfMissing(
+      endpoint.parser.toString(),
+      `parser ${endpoint.tablePath} of ${endpoint.url}`
+    );
+    const newRow = await endpoint.parser({
+      req,
+      db,
+      ref,
+      res: {
+        send: (v) => {
+          responseValue = v;
+        },
+        sendStatus: res.sendStatus,
+      },
+    });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");
-    if(responseValue){
-      cachedResponses.push(
-        {
-          endpoint:params.endpoint,
-          request:JSON.stringify(req.body),
-          response:responseValue
-        }
-      )
-      res.send(responseValue)
-    }else{
-      res.sendStatus(200)
+    if (responseValue) {
+      cachedResponses.push({
+        endpoint: params.endpoint,
+        request: JSON.stringify(req.body),
+        response: responseValue,
+      });
+      res.send(responseValue);
+    } else {
+      res.sendStatus(200);
     }
   } catch (error: any) {
     const errorCode = error.message.length === 3 ? error.message : "500";

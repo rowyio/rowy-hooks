@@ -54,7 +54,7 @@ interface Rowy {
    */
   secrets: {
     /**
-     * Get an existing secret from the secret manager. 
+     * Get an existing secret from the secret manager.
      */
     get: (name: string, version?: string) => Promise<string | undefined>;
   };
@@ -79,12 +79,12 @@ interface Rowy {
       ) => Promise<RowyFile | undefined>;
     };
   };
-/**
- * @deprecated will be removed in version 2.0.
- * use rowy.secrets.get instead.
- * Get an existing secret from the secret manager. 
- */
-  getSecret:(name: string, version?: string) => Promise<string | undefined>;
+  /**
+   * @deprecated will be removed in version 2.0.
+   * use rowy.secrets.get instead.
+   * Get an existing secret from the secret manager.
+   */
+  getSecret: (name: string, version?: string) => Promise<string | undefined>;
   /**
    * @deprecated will be removed in version 2.0.
    * use rowy.metadata.serviceAccountUser instead.

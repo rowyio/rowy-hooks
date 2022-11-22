@@ -27,21 +27,21 @@ export const hasAnyRole =
         const latestUser = await auth.getUser(user.uid);
         if (!latestUser) {
           return res.status(401).send("User not found");
-        }else{
-        const authDoubleCheck = roles.some((role) =>
-         latestUser.customClaims?.roles.includes(role)
-        );
-        if (authDoubleCheck) {
-          next();
         } else {
-          res.status(401).send({
-            error: "Unauthorized",
-            message: "User does not have any of the required roles",
-            roles,
-          });
+          const authDoubleCheck = roles.some((role) =>
+            latestUser.customClaims?.roles.includes(role)
+          );
+          if (authDoubleCheck) {
+            next();
+          } else {
+            res.status(401).send({
+              error: "Unauthorized",
+              message: "User does not have any of the required roles",
+              roles,
+            });
+          }
         }
       }
-    }
     } catch (err) {
       res.status(401).send({ error: err });
     }

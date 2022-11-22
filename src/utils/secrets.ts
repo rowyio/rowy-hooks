@@ -4,7 +4,7 @@ import { getProjectId } from "../metadataService.js";
 const secrets = new SecretManagerServiceClient();
 
 export const getSecret = async (name: string, v: string = "latest") => {
-    const projectId = await getProjectId()
+  const projectId = await getProjectId();
   const [version] = await secrets.accessSecretVersion({
     name: `projects/${projectId}/secrets/${name}/versions/${v}`,
   });

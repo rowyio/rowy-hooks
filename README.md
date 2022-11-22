@@ -7,4 +7,3 @@ Cloud run instance for managing webhooks on Rowy
 ```
 ./deploy.sh --project [YOUR_PROJECT_ID]
 ```
-
