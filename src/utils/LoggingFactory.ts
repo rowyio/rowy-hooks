@@ -54,6 +54,7 @@ class LoggingHooks implements RowyLogging {
     };
     const payloadSize = JSON.stringify(payload).length;
     const entry = log.entry(metadata, {
+      functionType: "hooks",
       loggingSource: "hooks",
       type: this.type,
       hooksSource: this.hooksSource,
