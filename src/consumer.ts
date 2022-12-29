@@ -7,24 +7,29 @@ import { getProjectId } from "./metadataService.js";
 import verifiers from "./verifiers/index.js";
 import rowy from "./utils/index.js";
 import installDependenciesIfMissing from "./utils/installDependenciesIfMissing.js";
+import { LoggingFactory, RowyLogging } from "./utils/LoggingFactory.js";
+import { WebhookType } from "./types.js";
 
 type Endpoint = {
+  name: string;
   cacheEnabled: boolean;
   url: string;
   path: string;
   method: string;
-  type: "typeform" | "github" | "sendgrid" | "basic" | "webform";
+  type: WebhookType;
   tablePath: string;
   conditions: (arg: {
     req: Request;
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
+    logging: RowyLogging;
   }) => Promise<boolean>;
   parser: (arg: {
     req: Request;
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
     res: { send: (v: any) => void; sendStatus: (v: number) => void };
+    logging: RowyLogging;
   }) => Promise<any>;
   auth: {
     secret: string;
@@ -106,7 +111,19 @@ export const consumer = async (req: Request, res: Response) => {
       endpoint.conditions.toString(),
       `condition ${endpoint.tablePath} of ${endpoint.url}`
     );
-    const condition = await endpoint.conditions({ req, db, ref });
+    const loggingConditions = await LoggingFactory.createHooksLogging(
+      endpoint.type,
+      "conditions",
+      endpoint.name,
+      endpoint.url,
+      endpoint.tablePath
+    );
+    const condition = await endpoint.conditions({
+      req,
+      db,
+      ref,
+      logging: loggingConditions,
+    });
     if (!condition) return res.sendStatus(412);
     let responseValue = undefined;
     const cachedResponse = cachedResponses.find(
@@ -121,6 +138,13 @@ export const consumer = async (req: Request, res: Response) => {
       endpoint.parser.toString(),
       `parser ${endpoint.tablePath} of ${endpoint.url}`
     );
+    const loggingParser = await LoggingFactory.createHooksLogging(
+      endpoint.type,
+      "parser",
+      endpoint.name,
+      endpoint.url,
+      endpoint.tablePath
+    );
     const newRow = await endpoint.parser({
       req,
       db,
@@ -131,6 +155,7 @@ export const consumer = async (req: Request, res: Response) => {
         },
         sendStatus: res.sendStatus,
       },
+      logging: loggingParser,
     });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");
