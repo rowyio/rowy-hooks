@@ -21,4 +21,4 @@ RUN npm install --production
 COPY --from=builder /home/node/app/build ./build
 
 EXPOSE 8080
-CMD [ "node", "build/index.js" ]
+CMD [ "node", "build/src/index.js" ]
