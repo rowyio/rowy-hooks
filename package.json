@@ -1,7 +1,7 @@
 {
   "name": "rowy-hooks",
   "description": "webhooks endpoint for rowy apps",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "main": "build/index.js",
   "type": "module",
   "scripts": {
