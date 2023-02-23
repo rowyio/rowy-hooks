@@ -3,9 +3,9 @@ import { getProjectId } from "../metadataService.js";
 import { WebhookType } from "../types.js";
 
 interface RowyLogging {
-  log: (payload: any) => void;
-  warn: (payload: any) => void;
-  error: (payload: any) => void;
+  log: (...payload: any[]) => void;
+  warn: (...payload: any[]) => void;
+  error: (...payload: any[]) => void;
 }
 
 type IHooksSource = "conditions" | "parser";
@@ -19,7 +19,14 @@ class LoggingFactory {
     tablePath: string
   ) {
     const projectId = await getProjectId();
-    return new LoggingHooks(projectId, type, hooksSource, webhookName, url, tablePath);
+    return new LoggingHooks(
+      projectId,
+      type,
+      hooksSource,
+      webhookName,
+      url,
+      tablePath
+    );
   }
 }
 
@@ -47,7 +54,7 @@ class LoggingHooks implements RowyLogging {
     this.logging = new Logging({ projectId });
   }
 
-  private async logWithSeverity(payload: any, severity: string) {
+  private async logWithSeverity(payload: any[], severity: string) {
     const log = this.logging.log(`rowy-logging`);
     const metadata = {
       severity,
@@ -61,20 +68,25 @@ class LoggingHooks implements RowyLogging {
       webhookName: this.webhookName,
       url: this.url,
       tablePath: this.tablePath,
-      payload: payloadSize > 250000 ? { v: "payload too large" } : payload,
+      payload:
+        payloadSize > 250000
+          ? { v: "payload too large" }
+          : payload.length > 1
+          ? payload
+          : payload[0],
     });
     await log.write(entry);
   }
 
-  async log(payload: any) {
+  async log(...payload: any[]) {
     await this.logWithSeverity(payload, "DEFAULT");
   }
 
-  async warn(payload: any) {
+  async warn(...payload: any[]) {
     await this.logWithSeverity(payload, "WARNING");
   }
 
-  async error(payload: any) {
+  async error(...payload: any[]) {
     await this.logWithSeverity(payload, "ERROR");
   }
 }
