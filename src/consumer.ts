@@ -32,8 +32,9 @@ type Endpoint = {
     req: Request;
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
-    res: { send: (v: any) => void; sendStatus: (v: number) => void };
+    res: { send: (v: any) => void; sendStatus: (v: number) => void ,    locals: any};
     logging: RowyLogging;
+    user: any;
     auth:Auth;
     storage: Storage
   }) => Promise<any>;
@@ -110,7 +111,7 @@ export const consumer = async (req: Request, res: Response) => {
     if (!endpoint) throw Error("404");
     const ref = db.collection(endpoint.tablePath);
     if (endpoint.auth?.enabled) {
-      const verified = await verifiers[endpoint.type](req, endpoint.auth);
+      const verified = await verifiers[endpoint.type](req,res, endpoint.auth);
       if (!verified) throw Error("401");
     }
     await installDependenciesIfMissing(
@@ -124,6 +125,7 @@ export const consumer = async (req: Request, res: Response) => {
       endpoint.url,
       endpoint.tablePath
     );
+    
     const condition = await endpoint.conditions({
       req,
       db,
@@ -162,9 +164,12 @@ export const consumer = async (req: Request, res: Response) => {
           responseValue = v;
         },
         sendStatus: res.sendStatus,
+        locals: res.locals,
       },
+      user: res.locals.user,
       logging: loggingParser,
-      auth,storage
+      auth,
+      storage
     });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");

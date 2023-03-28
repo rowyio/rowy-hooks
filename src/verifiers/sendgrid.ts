@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { EventWebhook, EventWebhookHeader } from "@sendgrid/eventwebhook";
 
-function sendgrid(request: Request, auth: any) {
+function sendgrid(request: Request,response: Response, auth: any) {
   const { secret } = auth;
   // The SendGrid EventWebhookHeader provides methods for getting
   // the necessary header names.

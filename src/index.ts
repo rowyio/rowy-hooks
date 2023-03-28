@@ -68,6 +68,9 @@ app.post(
 );
 app.post("/wh/:tablePath/:endpoint", consumer);
 app.get("/wh/:tablePath/:endpoint", consumer);
+app.put("/wh/:tablePath/:endpoint", consumer);
+app.delete("/wh/:tablePath/:endpoint", consumer);
+app.patch("/wh/:tablePath/:endpoint", consumer);
 
 // metadata service
 //app.get("/metadata",metadataService)

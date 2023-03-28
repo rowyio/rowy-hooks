@@ -1,6 +1,7 @@
+import { Response } from "express";
 import fetch from "node-fetch";
 
-async function webform(req: any, auth: any) {
+async function webform(req: any,res: Response, auth: any) {
   const { secret, minimumScore } = auth;
   const recaptchaResponse = req.body["g-recaptcha-response"];
   if (!recaptchaResponse) return false;
