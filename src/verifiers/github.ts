@@ -1,7 +1,7 @@
-import { Request } from "express";
+import { Request, Response } from "express";
 import crypto from "crypto";
 
-function github(request: Request, auth: any) {
+function github(request: Request,response: Response, auth: any) {
   const { secret } = auth;
   const signature = request.headers["x-hub-signature"];
   const hash = crypto

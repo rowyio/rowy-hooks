@@ -1,7 +1,8 @@
+import { Response } from "express";
 import { Stripe } from "stripe";
 import rowy from "../utils/index.js";
 
-async function stripe(request: any, auth: any) {
+async function stripe(request: any,response: Response, auth: any) {
   const { secretKey, signingSecret } = auth;
   const signature = request.headers["stripe-signature"];
 

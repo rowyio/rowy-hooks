@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { DocumentSnapshot } from "@google-cloud/firestore";
-import { db } from "./firebaseConfig.js";
+import { db ,auth, storage} from "./firebaseConfig.js";
 import { WEBHOOKS_DOC_PATH } from "./constants.js";
 import { Logging } from "@google-cloud/logging";
 import { getProjectId } from "./metadataService.js";
@@ -9,6 +9,8 @@ import rowy from "./utils/index.js";
 import installDependenciesIfMissing from "./utils/installDependenciesIfMissing.js";
 import { LoggingFactory, RowyLogging } from "./utils/LoggingFactory.js";
 import { WebhookType } from "./types.js";
+import { Auth } from "firebase-admin/auth";
+import { Storage } from "firebase-admin/storage";
 
 type Endpoint = {
   name: string;
@@ -23,13 +25,18 @@ type Endpoint = {
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
     logging: RowyLogging;
+    auth:Auth;
+    storage: Storage
   }) => Promise<boolean>;
   parser: (arg: {
     req: Request;
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
-    res: { send: (v: any) => void; sendStatus: (v: number) => void };
+    res: { send: (v: any) => void; sendStatus: (v: number) => void ,    locals: any};
     logging: RowyLogging;
+    user: any;
+    auth:Auth;
+    storage: Storage
   }) => Promise<any>;
   auth: {
     secret: string;
@@ -104,7 +111,7 @@ export const consumer = async (req: Request, res: Response) => {
     if (!endpoint) throw Error("404");
     const ref = db.collection(endpoint.tablePath);
     if (endpoint.auth?.enabled) {
-      const verified = await verifiers[endpoint.type](req, endpoint.auth);
+      const verified = await verifiers[endpoint.type](req,res, endpoint.auth);
       if (!verified) throw Error("401");
     }
     await installDependenciesIfMissing(
@@ -118,11 +125,14 @@ export const consumer = async (req: Request, res: Response) => {
       endpoint.url,
       endpoint.tablePath
     );
+    
     const condition = await endpoint.conditions({
       req,
       db,
       ref,
       logging: loggingConditions,
+      auth,
+      storage
     });
     if (!condition) return res.sendStatus(412);
     let responseValue = undefined;
@@ -154,8 +164,12 @@ export const consumer = async (req: Request, res: Response) => {
           responseValue = v;
         },
         sendStatus: res.sendStatus,
+        locals: res.locals,
       },
+      user: res.locals.user,
       logging: loggingParser,
+      auth,
+      storage
     });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");

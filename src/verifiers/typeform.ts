@@ -1,6 +1,7 @@
 import crypto from "crypto";
+import { Response } from "express";
 
-function typeform(request: any, auth: any) {
+function typeform(request: any,response: Response, auth: any) {
   const signature = request.headers["typeform-signature"];
   const { secret } = auth;
   const rawBody = request.rawBody.toString();

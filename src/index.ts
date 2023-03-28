@@ -8,7 +8,8 @@ import { hasAnyRole, requireAuth } from "./middleware/auth.js";
 import { configPublisher } from "./publisher.js";
 import { consumer } from "./consumer.js";
 import rowyRedirect from "./rowyRedirect.js";
-//import { metadataService } from './metadataService.js';
+import { version } from "./utils/version.js";
+
 const app = express.default();
 // json is the default content-type for POST requests
 const rawBodySaver = (
@@ -55,6 +56,9 @@ const functionWrapper =
 // redirect /
 app.get("/", rowyRedirect);
 
+// Version
+app.get("/version", functionWrapper(version));
+
 // Webhooks
 app.post(
   "/publish",
@@ -64,6 +68,9 @@ app.post(
 );
 app.post("/wh/:tablePath/:endpoint", consumer);
 app.get("/wh/:tablePath/:endpoint", consumer);
+app.put("/wh/:tablePath/:endpoint", consumer);
+app.delete("/wh/:tablePath/:endpoint", consumer);
+app.patch("/wh/:tablePath/:endpoint", consumer);
 
 // metadata service
 //app.get("/metadata",metadataService)
