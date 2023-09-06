@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { DocumentSnapshot } from "@google-cloud/firestore";
-import { db ,auth, storage} from "./firebaseConfig.js";
+import { db, auth, storage } from "./firebaseConfig.js";
 import { WEBHOOKS_DOC_PATH } from "./constants.js";
 import { Logging } from "@google-cloud/logging";
 import { getProjectId } from "./metadataService.js";
@@ -11,6 +11,7 @@ import { LoggingFactory, RowyLogging } from "./utils/LoggingFactory.js";
 import { WebhookType } from "./types.js";
 import { Auth } from "firebase-admin/auth";
 import { Storage } from "firebase-admin/storage";
+import { getTableSchema } from "./utils/rowySettings.js";
 
 type Endpoint = {
   name: string;
@@ -25,18 +26,28 @@ type Endpoint = {
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
     logging: RowyLogging;
-    auth:Auth;
-    storage: Storage
+    auth: Auth;
+    storage: Storage;
+    tableSchema: {
+      get: () => Promise<any>;
+    };
   }) => Promise<boolean>;
   parser: (arg: {
     req: Request;
     db: FirebaseFirestore.Firestore;
     ref: FirebaseFirestore.CollectionReference;
-    res: { send: (v: any) => void; sendStatus: (v: number) => void ,    locals: any};
+    res: {
+      send: (v: any) => void;
+      sendStatus: (v: number) => void;
+      locals: any;
+    };
     logging: RowyLogging;
     user: any;
-    auth:Auth;
-    storage: Storage
+    auth: Auth;
+    storage: Storage;
+    tableSchema: {
+      get: () => Promise<any>;
+    };
   }) => Promise<any>;
   auth: {
     secret: string;
@@ -111,7 +122,7 @@ export const consumer = async (req: Request, res: Response) => {
     if (!endpoint) throw Error("404");
     const ref = db.collection(endpoint.tablePath);
     if (endpoint.auth?.enabled) {
-      const verified = await verifiers[endpoint.type](req,res, endpoint.auth);
+      const verified = await verifiers[endpoint.type](req, res, endpoint.auth);
       if (!verified) throw Error("401");
     }
     await installDependenciesIfMissing(
@@ -125,14 +136,16 @@ export const consumer = async (req: Request, res: Response) => {
       endpoint.url,
       endpoint.tablePath
     );
-    
+    const tableSchema = { get: getTableSchema(endpoint.tablePath) };
+
     const condition = await endpoint.conditions({
       req,
       db,
       ref,
       logging: loggingConditions,
       auth,
-      storage
+      storage,
+      tableSchema,
     });
     if (!condition) return res.sendStatus(412);
     let responseValue = undefined;
@@ -169,7 +182,8 @@ export const consumer = async (req: Request, res: Response) => {
       user: res.locals.user,
       logging: loggingParser,
       auth,
-      storage
+      storage,
+      tableSchema,
     });
     if (newRow) await Promise.all([ref.add(newRow), logEvent(req, "200")]);
     else await logEvent(req, "200");
